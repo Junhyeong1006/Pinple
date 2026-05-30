@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Heart, MessageCircle, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -92,7 +93,7 @@ export function StoryViewer({
     touchStartX.current = null;
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center select-none font-sans">
       <div 
         className="relative w-full max-w-lg h-full max-h-[100dvh] flex flex-col justify-between overflow-hidden shadow-2xl md:h-[92dvh] md:rounded-3xl border border-zinc-800/40"
@@ -233,6 +234,7 @@ export function StoryViewer({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

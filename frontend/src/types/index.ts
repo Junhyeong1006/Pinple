@@ -71,10 +71,21 @@ export const CATEGORIES: CategoryMeta[] = [
 
 export function parseUTCDate(dateStr: string): Date {
   if (!dateStr) return new Date();
-  // If it's a naive datetime string (lacks Z offset), append 'Z' so browser treats it as UTC
-  const utcStr = (dateStr.includes('T') && !dateStr.endsWith('Z') && !dateStr.includes('+'))
-    ? `${dateStr}Z`
-    : dateStr;
-  return new Date(utcStr);
+  
+  // Normalize spacing to ISO 'T' format
+  let normalized = dateStr.trim().replace(' ', 'T');
+  
+  // Append 'Z' to treat as UTC if it's naive (lacks Z, +, or negative timezone offset in the time part)
+  const hasZ = normalized.endsWith('Z');
+  const hasPlus = normalized.includes('+');
+  const hasMinusOffset = normalized.includes('T') && normalized.split('T')[1].includes('-');
+  
+  if (!hasZ && !hasPlus && !hasMinusOffset) {
+    normalized = `${normalized}Z`;
+  }
+  
+  const parsed = new Date(normalized);
+  return isNaN(parsed.getTime()) ? new Date(dateStr) : parsed;
 }
+
 
