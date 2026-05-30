@@ -246,10 +246,7 @@ export default function HomePage() {
             refreshPosts();
             refreshStories();
           }}
-          onCommentChange={() => {
-            refreshPosts();
-            refreshStories();
-          }}
+          onOpenComments={handleViewStoryLocation}
         />
       )}
     </div>

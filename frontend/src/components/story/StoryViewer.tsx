@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Heart, MessageCircle, MapPin, ChevronLeft, ChevronRight, Send, Loader2, User } from 'lucide-react';
+import { X, Heart, MessageCircle, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Post, Category, parseUTCDate, Comment } from '../../types';
-import { reactionsApi, commentsApi, postsApi } from '../../services/api';
+import { Post, Category, parseUTCDate } from '../../types';
+import { reactionsApi } from '../../services/api';
 
 interface StoryViewerProps {
   stories: Post[];
@@ -19,7 +19,7 @@ interface StoryViewerProps {
   onSelectIndex: (index: number) => void;
   onViewLocation: (post: Post) => void;
   onLikeToggle?: () => void;
-  onCommentChange?: () => void;
+  onOpenComments: (post: Post) => void;
 }
 
 export function StoryViewer({
@@ -35,7 +35,7 @@ export function StoryViewer({
   onSelectIndex,
   onViewLocation,
   onLikeToggle,
-  onCommentChange,
+  onOpenComments,
 }: StoryViewerProps) {
   const currentStory = stories[currentIndex];
   const touchStartX = useRef<number | null>(null);
@@ -44,15 +44,6 @@ export function StoryViewer({
   const [likeCount, setLikeCount] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
-
-  // Comments panel states
-  const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [commentsLoading, setCommentsLoading] = useState(false);
-  const [commentAuthor, setCommentAuthor] = useState(() => localStorage.getItem('pinple-nickname') || '');
-  const [commentContent, setCommentContent] = useState('');
-  const [commentSubmitting, setCommentSubmitting] = useState(false);
-  const [commentError, setCommentError] = useState<string | null>(null);
 
   // Close story on Escape key
   useEffect(() => {
@@ -63,37 +54,14 @@ export function StoryViewer({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  // Sync likes state and reset comments panel when story index changes
+  // Sync likes state when story index changes
   useEffect(() => {
     if (currentStory) {
       setLikeCount(currentStory.likes);
       const likedPosts = JSON.parse(localStorage.getItem('pinple-liked-posts') || '[]');
       setIsLiked(likedPosts.includes(currentStory.id));
-      setShowComments(false);
     }
   }, [currentStory]);
-
-  // Fetch comments when comments panel opens
-  useEffect(() => {
-    if (showComments && currentStory) {
-      const fetchComments = async () => {
-        setCommentsLoading(true);
-        try {
-          const detail = await postsApi.getById(currentStory.id);
-          // Sort comments by created_at ascending
-          const sorted = [...detail.comments].sort((a, b) => 
-            new Date(parseUTCDate(a.created_at)).getTime() - new Date(parseUTCDate(b.created_at)).getTime()
-          );
-          setComments(sorted);
-        } catch (err) {
-          console.error('Failed to load comments in story:', err);
-        } finally {
-          setCommentsLoading(false);
-        }
-      };
-      fetchComments();
-    }
-  }, [showComments, currentStory]);
 
   if (!currentStory) return null;
 
@@ -127,13 +95,11 @@ export function StoryViewer({
 
   // Handle mobile swipe left/right
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (showComments) return; // Ignore swipe when comment list is open
     touchStartX.current = e.touches[0].clientX;
     onPause(); // Pause progress on touch-hold
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (showComments) return;
     onPlay(); // Resume progress on release
     if (!touchStartX.current) return;
     const diffX = e.changedTouches[0].clientX - touchStartX.current;
@@ -173,60 +139,14 @@ export function StoryViewer({
     }
   };
 
-  // Comment submit handler
-  const handleCommentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commentContent.trim()) return;
-
-    setCommentSubmitting(true);
-    setCommentError(null);
-    const author = commentAuthor.trim() || '익명';
-
-    try {
-      const newComment = await commentsApi.create(currentStory.id, {
-        author,
-        content: commentContent.trim()
-      });
-
-      // Save nickname preference
-      if (author !== '익명') {
-        localStorage.setItem('pinple-nickname', author);
-      }
-
-      setComments((prev) => [...prev, newComment]);
-      setCommentContent('');
-      
-      // Speculatively increase count in list representation
-      currentStory.comment_count += 1;
-      
-      if (onCommentChange) onCommentChange();
-    } catch (err: any) {
-      setCommentError(err.message || '댓글 등록에 실패했습니다.');
-    } finally {
-      setCommentSubmitting(false);
-    }
-  };
-
-  const handleOpenComments = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowComments(true);
-    onPause();
-  };
-
-  const handleCloseComments = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    setShowComments(false);
-    onPlay();
-  };
-
   return createPortal(
     <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center select-none font-sans">
       <div 
         className="relative w-full max-w-lg h-full max-h-[100dvh] flex flex-col justify-between overflow-hidden shadow-2xl md:h-[92dvh] md:rounded-3xl border border-zinc-800/40"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        onMouseDown={() => { if (!showComments) onPause(); }}
-        onMouseUp={() => { if (!showComments) onPlay(); }}
+        onMouseDown={onPause}
+        onMouseUp={onPlay}
       >
         {/* Neon Gradient Background (Always active, overlays photo if present) */}
         <div className={`absolute inset-0 bg-gradient-to-br ${style.gradient} z-0 pointer-events-none transition-all duration-500`} />
@@ -247,7 +167,7 @@ export function StoryViewer({
             {stories.map((_, index) => (
               <div 
                 key={index} 
-                onClick={() => { if (!showComments) onSelectIndex(index); }}
+                onClick={() => onSelectIndex(index)}
                 className="h-1 flex-1 bg-white/30 rounded-full cursor-pointer relative overflow-hidden"
               >
                 <div
@@ -307,22 +227,18 @@ export function StoryViewer({
         </button>
 
         {/* Tap zones for side-to-side navigation (any viewport size) */}
-        {!showComments && (
-          <>
-            <div 
-              className="absolute inset-y-1/4 left-0 w-1/4 z-10 cursor-w-resize" 
-              onClick={(e) => { e.stopPropagation(); onPrev(); }}
-              onMouseDown={(e) => e.stopPropagation()}
-              onMouseUp={(e) => e.stopPropagation()}
-            />
-            <div 
-              className="absolute inset-y-1/4 right-0 w-1/4 z-10 cursor-e-resize" 
-              onClick={(e) => { e.stopPropagation(); onNext(); }}
-              onMouseDown={(e) => e.stopPropagation()}
-              onMouseUp={(e) => e.stopPropagation()}
-            />
-          </>
-        )}
+        <div 
+          className="absolute inset-y-1/4 left-0 w-1/4 z-10 cursor-w-resize" 
+          onClick={(e) => { e.stopPropagation(); onPrev(); }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
+        />
+        <div 
+          className="absolute inset-y-1/4 right-0 w-1/4 z-10 cursor-e-resize" 
+          onClick={(e) => { e.stopPropagation(); onNext(); }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
+        />
 
         {/* Bottom Detailed Info Panel (Glassmorphic) */}
         <div className="relative z-10 p-5 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex flex-col gap-4 mt-auto">
@@ -356,13 +272,16 @@ export function StoryViewer({
                 <span className="text-xs font-bold">{likeCount}</span>
               </button>
 
-              {/* Comments toggle button */}
+              {/* Comments Redirect Button */}
               <button
-                onClick={handleOpenComments}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenComments(currentStory);
+                }}
                 onMouseDown={(e) => e.stopPropagation()}
                 onMouseUp={(e) => e.stopPropagation()}
                 className="flex items-center gap-1.5 hover:scale-110 active:scale-95 transition-transform duration-200"
-                title="댓글 피드 열기"
+                title="댓글 보러가기"
               >
                 <MessageCircle size={18} className="text-sky-400" />
                 <span className="text-xs font-bold">{currentStory.comment_count}</span>
@@ -383,117 +302,6 @@ export function StoryViewer({
             </button>
           </div>
         </div>
-
-        {/* Glassmorphic Comments Bottom Sheet Overlay */}
-        {showComments && (
-          <div 
-            className="absolute inset-x-0 bottom-0 z-30 h-[65%] glass backdrop-blur-2xl bg-zinc-950/90 border-t border-white/10 rounded-t-3xl shadow-2xl flex flex-col animate-slide-up"
-            onClick={(e) => e.stopPropagation()}
-            onMouseDown={(e) => e.stopPropagation()}
-            onMouseUp={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-              <div className="flex items-center gap-2">
-                <MessageCircle size={16} className="text-sky-400" />
-                <span className="font-extrabold text-sm text-white">댓글 피드</span>
-                <span className="text-[10px] bg-white/10 text-white/70 px-2 py-0.5 rounded-full font-black">
-                  {comments.length}
-                </span>
-              </div>
-              <button 
-                onClick={handleCloseComments}
-                className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Scrollable Comment Feed */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin">
-              {commentsLoading ? (
-                <div className="flex flex-col items-center justify-center h-full space-y-2">
-                  <Loader2 className="w-6 h-6 text-violet-400 animate-spin" />
-                  <span className="text-[10px] text-white/50 font-bold">의견 로딩 중...</span>
-                </div>
-              ) : comments.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-[180px] text-center text-white/40 py-8 border border-dashed border-white/5 rounded-2xl">
-                  <span className="text-xs font-semibold">아직 의견이 없습니다.</span>
-                  <span className="text-[10px] text-white/30 mt-1">첫 댓글을 든든하게 달아주세요!</span>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {comments.map((comment) => (
-                    <div 
-                      key={comment.id}
-                      className="p-3 bg-white/5 border border-white/5 rounded-2xl space-y-1"
-                    >
-                      <div className="flex items-center justify-between text-[10px]">
-                        <span className="font-extrabold text-white/90 flex items-center gap-1">
-                          <User size={10} className="text-white/60" /> {comment.author}
-                        </span>
-                        <span className="text-white/40 font-bold">
-                          {formatDistanceToNow(parseUTCDate(comment.created_at), { addSuffix: true, locale: ko })}
-                        </span>
-                      </div>
-                      <p className="text-xs text-white/80 leading-relaxed font-semibold break-all">
-                        {comment.content}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Comment Form */}
-            <form 
-              onSubmit={handleCommentSubmit}
-              className="p-4 border-t border-white/5 bg-zinc-950/95 space-y-2"
-            >
-              {commentError && (
-                <p className="text-rose-400 text-[10px] font-bold">⚠️ {commentError}</p>
-              )}
-              <div className="flex gap-2">
-                <div className="relative w-20 flex-shrink-0">
-                  <User className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
-                  <input
-                    type="text"
-                    placeholder="닉네임"
-                    value={commentAuthor}
-                    onChange={(e) => setCommentAuthor(e.target.value)}
-                    className="w-full pl-6 pr-2 py-2 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-violet-500 font-extrabold text-[10px]"
-                    maxLength={10}
-                    autoComplete="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    name="nickname"
-                  />
-                </div>
-                <div className="relative flex-grow flex items-center">
-                  <input
-                    type="text"
-                    placeholder="댓글을 남겨주세요..."
-                    value={commentContent}
-                    onChange={(e) => setCommentContent(e.target.value)}
-                    className="w-full pl-3 pr-9 py-2 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-violet-500 text-[10px] font-bold placeholder-white/30"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    disabled={commentSubmitting || !commentContent.trim()}
-                    className="absolute right-1.5 p-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition disabled:opacity-50"
-                  >
-                    {commentSubmitting ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <Send className="w-3 h-3" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        )}
       </div>
     </div>,
     document.body
