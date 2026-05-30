@@ -68,3 +68,13 @@ export const CATEGORIES: CategoryMeta[] = [
   { key: 'suggestion', label: '건의', color: '#0EA5E9', bgColor: 'rgba(14,165,233,0.08)', glowColor: 'rgba(14,165,233,0.4)', icon: '💡' },
   { key: 'info', label: '정보', color: '#10B981', bgColor: 'rgba(16,185,129,0.08)', glowColor: 'rgba(16,185,129,0.4)', icon: '📢' },
 ];
+
+export function parseUTCDate(dateStr: string): Date {
+  if (!dateStr) return new Date();
+  // If it's a naive datetime string (lacks Z offset), append 'Z' so browser treats it as UTC
+  const utcStr = (dateStr.includes('T') && !dateStr.endsWith('Z') && !dateStr.includes('+'))
+    ? `${dateStr}Z`
+    : dateStr;
+  return new Date(utcStr);
+}
+

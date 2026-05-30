@@ -1,6 +1,6 @@
 import React from 'react';
-import { Post, CATEGORIES } from '../../types';
-import { formatDistanceToNow, parseISO } from 'date-fns';
+import { Post, CATEGORIES, parseUTCDate } from '../../types';
+import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Heart, MessageSquare, User, Calendar } from 'lucide-react';
 
@@ -15,7 +15,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onClick }) => {
   // Format creation time nicely (e.g., "3 hours ago", "yesterday")
   const getFormattedDate = (dateStr: string) => {
     try {
-      const date = parseISO(dateStr);
+      const date = parseUTCDate(dateStr);
       return formatDistanceToNow(date, { addSuffix: true, locale: ko });
     } catch (e) {
       return dateStr;

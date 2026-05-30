@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { X, Heart, MessageCircle, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Post, Category } from '../../types';
+import { Post, Category, parseUTCDate } from '../../types';
 
 interface StoryViewerProps {
   stories: Post[];
@@ -143,7 +143,7 @@ export function StoryViewer({
               <div className="flex flex-col">
                 <span className="text-sm font-black tracking-wide">{currentStory.author}</span>
                 <span className="text-[10px] text-white/70">
-                  {formatDistanceToNow(new Date(currentStory.created_at), { addSuffix: true, locale: ko })}
+                  {formatDistanceToNow(parseUTCDate(currentStory.created_at), { addSuffix: true, locale: ko })}
                 </span>
               </div>
             </div>

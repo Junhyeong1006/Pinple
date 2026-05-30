@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { PostDetail as IPostDetail, CATEGORIES } from '../../types';
+import { PostDetail as IPostDetail, CATEGORIES, parseUTCDate } from '../../types';
 import { postsApi, commentsApi, reactionsApi } from '../../services/api';
-import { formatDistanceToNow, parseISO } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Heart, MessageSquare, Send, X, User, Calendar, Trash2, Loader2, ArrowLeft } from 'lucide-react';
 
@@ -160,7 +160,7 @@ export const PostDetail: React.FC<PostDetailProps> = ({
 
   const getFormattedDate = (dateStr: string) => {
     try {
-      return formatDistanceToNow(parseISO(dateStr), { addSuffix: true, locale: ko });
+      return formatDistanceToNow(parseUTCDate(dateStr), { addSuffix: true, locale: ko });
     } catch (e) {
       return dateStr;
     }
