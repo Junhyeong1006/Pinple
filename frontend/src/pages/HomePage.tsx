@@ -70,7 +70,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex-1 relative w-full h-[calc(100vh-136px)] md:h-[calc(100vh-80px)] overflow-hidden flex z-0">
+    <div className="flex-1 relative w-full h-[500px] sm:h-[600px] md:h-[calc(100vh-80px)] overflow-hidden flex z-0">
       {/* 1. Main Map Layer */}
       <MapView 
         posts={posts} 

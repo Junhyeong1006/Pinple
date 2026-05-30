@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import { Post } from '../../types';
@@ -52,6 +52,19 @@ function MapCenterController() {
   return null;
 }
 
+// Sub-component to force Leaflet to recalculate container bounds on load and theme switch
+function MapResizeTrigger({ theme }: { theme: string }) {
+  const map = useMap();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [map, theme]);
+  return null;
+}
+
+
 // Custom user location blue pulse marker
 const createUserLocationIcon = (): L.DivIcon => {
   const html = `
@@ -83,7 +96,7 @@ export const MapView: React.FC<MapViewProps> = ({ posts, onMarkerClick }) => {
   const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
   return (
-    <div className="w-full h-full relative z-0">
+    <div className="w-full h-full absolute inset-0 z-0">
       <MapContainer
         center={center}
         zoom={zoom}
@@ -100,39 +113,33 @@ export const MapView: React.FC<MapViewProps> = ({ posts, onMarkerClick }) => {
 
         <MapEventsHandler />
         <MapCenterController />
+        <MapResizeTrigger theme={theme} />
 
         {/* User Location Marker */}
         {userLocation && (
           <Marker position={userLocation} icon={createUserLocationIcon()} zIndexOffset={1000} />
         )}
 
-        {/* Clustered Post Markers */}
-        <MarkerClusterGroup
-          chunkedLoading
-          showCoverageOnHover={false}
-          spiderfyOnMaxZoom={true}
-          maxClusterRadius={50}
-        >
-          {posts.map((post) => {
-            const icon = createCustomMarkerIcon(post.category);
-            return (
-              <Marker
-                key={post.id}
-                position={[post.latitude, post.longitude]}
-                icon={icon}
-                eventHandlers={{
-                  click: () => {
-                    if (onMarkerClick) {
-                      onMarkerClick(post);
-                    } else {
-                      navigate(`/posts/${post.id}`);
-                    }
-                  },
-                }}
-              />
-            );
-          })}
-        </MarkerClusterGroup>
+        {/* Post Markers */}
+        {posts.map((post) => {
+          const icon = createCustomMarkerIcon(post.category);
+          return (
+            <Marker
+              key={post.id}
+              position={[post.latitude, post.longitude]}
+              icon={icon}
+              eventHandlers={{
+                click: () => {
+                  if (onMarkerClick) {
+                    onMarkerClick(post);
+                  } else {
+                    navigate(`/posts/${post.id}`);
+                  }
+                },
+              }}
+            />
+          );
+        })}
       </MapContainer>
     </div>
   );

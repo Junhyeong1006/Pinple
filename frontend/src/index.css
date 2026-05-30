@@ -26,3 +26,10 @@
            border-t border-zinc-200/40 dark:border-zinc-800/40;
   }
 }
+
+/* Ensure react-leaflet maps scale correctly inside layout containers */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
