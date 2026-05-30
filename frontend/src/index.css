@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Load Pretendard webfont for high-quality Korean display */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+/* Import Leaflet CSS to ensure map grids don't break */
+@import 'leaflet/dist/leaflet.css';
+
+@layer base {
+  body {
+    @apply bg-surface-light dark:bg-surface-dark text-zinc-900 dark:text-zinc-100
+           font-sans antialiased transition-colors duration-300;
+  }
+}
+
+/* Glassmorphism custom classes */
+@layer components {
+  .glass {
+    @apply backdrop-blur-lg bg-white/80 dark:bg-slate-900/80
+           border border-zinc-200/50 dark:border-zinc-800/50;
+  }
+  .glass-nav {
+    @apply backdrop-blur-md bg-white/70 dark:bg-slate-950/70
+           border-t border-zinc-200/40 dark:border-zinc-800/40;
+  }
+}
