@@ -150,6 +150,8 @@ export function StoryViewer({
             
             <button
               onClick={(e) => { e.stopPropagation(); onClose(); }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onMouseUp={(e) => e.stopPropagation()}
               className="p-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white/80 hover:text-white transition-colors duration-200"
               title="닫기"
             >
@@ -161,6 +163,8 @@ export function StoryViewer({
         {/* Desktop Side Navigation Buttons */}
         <button
           onClick={(e) => { e.stopPropagation(); onPrev(); }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
           className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-black/30 hover:bg-black/50 text-white/75 hover:text-white hover:scale-105 active:scale-95 transition-all duration-200 hidden md:block"
         >
           <ChevronLeft size={24} />
@@ -168,14 +172,26 @@ export function StoryViewer({
 
         <button
           onClick={(e) => { e.stopPropagation(); onNext(); }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
           className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-black/30 hover:bg-black/50 text-white/75 hover:text-white hover:scale-105 active:scale-95 transition-all duration-200 hidden md:block"
         >
           <ChevronRight size={24} />
         </button>
 
-        {/* Touch zones for mobile tap navigation */}
-        <div className="absolute inset-y-1/4 left-0 w-1/4 z-10 cursor-w-resize md:hidden" onClick={(e) => { e.stopPropagation(); onPrev(); }} />
-        <div className="absolute inset-y-1/4 right-0 w-1/4 z-10 cursor-e-resize md:hidden" onClick={(e) => { e.stopPropagation(); onNext(); }} />
+        {/* Tap zones for side-to-side navigation (any viewport size) */}
+        <div 
+          className="absolute inset-y-1/4 left-0 w-1/4 z-10 cursor-w-resize" 
+          onClick={(e) => { e.stopPropagation(); onPrev(); }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
+        />
+        <div 
+          className="absolute inset-y-1/4 right-0 w-1/4 z-10 cursor-e-resize" 
+          onClick={(e) => { e.stopPropagation(); onNext(); }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
+        />
 
         {/* Bottom Detailed Info Panel (Glassmorphic) */}
         <div className="relative z-10 p-5 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex flex-col gap-4 mt-auto">

@@ -65,7 +65,7 @@ export function StoryRingBar({ onOpenStory }: StoryRingBarProps) {
               className="flex flex-col items-center gap-1 min-w-[56px] transition-all duration-200 hover:scale-105 active:scale-95 group focus:outline-none"
             >
               {/* Profile Story Ring */}
-              <div className={`w-13 h-13 rounded-full p-[2.5px] bg-gradient-to-tr ${theme.border} group-hover:rotate-12 transition-transform duration-500 shadow-md`}>
+              <div className={`w-14 h-14 rounded-full p-[2.5px] bg-gradient-to-tr ${theme.border} group-hover:rotate-12 transition-transform duration-500 shadow-md`}>
                 <div className="w-full h-full rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center relative overflow-hidden">
                   {story.image_url ? (
                     <img 
