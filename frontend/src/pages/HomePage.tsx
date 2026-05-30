@@ -192,8 +192,18 @@ export default function HomePage() {
           <PostDetail
             postId={selectedPostId}
             onClose={() => setSelectedPostId(null)}
-            onDeleteSuccess={refreshPosts}
-            onLikeToggle={refreshPosts}
+            onDeleteSuccess={() => {
+              refreshPosts();
+              refreshStories();
+            }}
+            onLikeToggle={() => {
+              refreshPosts();
+              refreshStories();
+            }}
+            onCommentChange={() => {
+              refreshPosts();
+              refreshStories();
+            }}
           />
         </div>
       )}
@@ -232,6 +242,14 @@ export default function HomePage() {
           onPlay={playStories}
           onSelectIndex={selectStoryIndex}
           onViewLocation={handleViewStoryLocation}
+          onLikeToggle={() => {
+            refreshPosts();
+            refreshStories();
+          }}
+          onCommentChange={() => {
+            refreshPosts();
+            refreshStories();
+          }}
         />
       )}
     </div>

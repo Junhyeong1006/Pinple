@@ -10,13 +10,15 @@ interface PostDetailProps {
   onClose: () => void;
   onDeleteSuccess?: () => void;
   onLikeToggle?: () => void;
+  onCommentChange?: () => void;
 }
 
 export const PostDetail: React.FC<PostDetailProps> = ({ 
   postId, 
   onClose, 
   onDeleteSuccess,
-  onLikeToggle
+  onLikeToggle,
+  onCommentChange
 }) => {
   const [post, setPost] = useState<IPostDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -113,6 +115,7 @@ export const PostDetail: React.FC<PostDetailProps> = ({
         };
       });
       setCommentContent('');
+      if (onCommentChange) onCommentChange();
     } catch (err: any) {
       setCommentError(err.message || '댓글 등록에 실패했습니다.');
     } finally {
@@ -297,14 +300,21 @@ export const PostDetail: React.FC<PostDetailProps> = ({
           <p className="text-rose-500 text-xs font-semibold">⚠️ {commentError}</p>
         )}
         <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="이름"
-            value={commentAuthor}
-            onChange={(e) => setCommentAuthor(e.target.value)}
-            className="w-20 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-violet-500 font-semibold text-xs"
-            maxLength={10}
-          />
+          <div className="relative w-24 flex-shrink-0">
+            <User className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="닉네임"
+              value={commentAuthor}
+              onChange={(e) => setCommentAuthor(e.target.value)}
+              className="w-full pl-7 pr-2 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-violet-500 font-bold text-xs"
+              maxLength={10}
+              autoComplete="off"
+              autoCapitalize="off"
+              spellCheck="false"
+              name="nickname"
+            />
+          </div>
           <div className="relative flex-grow flex items-center">
             <input
               type="text"
