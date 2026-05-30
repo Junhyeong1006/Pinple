@@ -8,12 +8,20 @@ is_sqlite = settings.DATABASE_URL.startswith("sqlite")
 connect_args = {}
 poolclass = None
 
+import os
+
 if is_sqlite:
     # 1. check_same_thread=False allows FastAPI multi-threading
     # 2. timeout=30.0 gives SQLite up to 30s to wait for a write lock release before throwing error
     connect_args = {"check_same_thread": False, "timeout": 30.0}
     # StaticPool prevents multiple database instances from locking each other
     poolclass = StaticPool
+    
+    # Auto-create directory path if it contains subdirectories
+    db_path = settings.DATABASE_URL.replace("sqlite:///", "")
+    db_dir = os.path.dirname(db_path)
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
 
 engine = create_engine(
     settings.DATABASE_URL,

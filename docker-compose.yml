@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pinple-backend
+    restart: always
+    volumes:
+      - sqlite-data:/app/db
+      - uploads-data:/app/uploads
+    environment:
+      - DATABASE_URL=sqlite:///app/db/pinple.db
+      - ALLOWED_ORIGINS=*
+    # Expose internally but do not map ports to host directly, 
+    # as the frontend Nginx handles routing to the backend.
+    expose:
+      - 8000
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pinple-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    # Connects to backend container inside the default compose network
+
+volumes:
+  sqlite-data:
+    driver: local
+  uploads-data:
+    driver: local
