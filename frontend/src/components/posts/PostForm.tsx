@@ -243,8 +243,13 @@ export const PostForm: React.FC<PostFormProps> = ({ onSuccess, onCancel }) => {
               type="file"
               accept="image/*"
               className="hidden"
-              {...register('image')}
-              onChange={handleImageChange}
+              ref={register('image').ref}
+              name={register('image').name}
+              onBlur={register('image').onBlur}
+              onChange={(e) => {
+                register('image').onChange(e);
+                handleImageChange(e);
+              }}
             />
           </label>
         )}
